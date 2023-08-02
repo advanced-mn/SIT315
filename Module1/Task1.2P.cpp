@@ -24,6 +24,7 @@ void ISR_sensor()
 {
   if (digitalRead(led_pin) == LOW){
     digitalWrite(led_pin, HIGH);
+    Serial.println("ON");
   } else
   {
   	digitalWrite(led_pin, LOW);
