@@ -1,7 +1,8 @@
 static int led_pin = 13;
 static int sensor_pin = 2;
-static int sensor2_pin = 3;
+static int btn_pin = 3;
 
+static bool state = false;
 
 void setup()
 {
@@ -9,31 +10,53 @@ void setup()
   pinMode(led_pin, OUTPUT);
   // Set up the pin to input mode
   pinMode(sensor_pin, INPUT);
-
-  pinMode(sensor2_pin, INPUT);
+  
+  pinMode(btn_pin, INPUT_PULLUP);
+  
+  attachInterrupt(digitalPinToInterrupt(btn_pin),
+                  btn_interrupt, FALLING);
   
   attachInterrupt(digitalPinToInterrupt(sensor_pin),
-                  ISR_sensor, CHANGE);
-  
-  attachInterrupt(digitalPinToInterrupt(sensor2_pin),
-                  ISR_sensor, CHANGE);
+                  sensor_interrupt, CHANGE);
+ 
   
   Serial.begin(9600);
 }
 
-void ISR_sensor()
+void btn_interrupt()
 {  
-  if (digitalRead(sensor_pin) == HIGH || 
-      digitalRead(sensor2_pin) == HIGH){
+  if (state == false){
+    state = true;
+  	Serial.println("System ON");
+    Serial.println("");
+  }
+  else if (state == true){
+    state = false;
+  	Serial.println("System OFF");
+    Serial.println("");
+  }   
+}
+
+void sensor_interrupt()
+{  
+  if (digitalRead(sensor_pin) == HIGH && state == true)
+  {
     digitalWrite(led_pin, HIGH);
     Serial.println("ON");
-
-  } else
+  } else if (digitalRead(sensor_pin) == LOW &&
+             state == true)
   {
   	digitalWrite(led_pin, LOW);
     Serial.println("OFF");
+    Serial.println("");
+  } else if (state == false && 
+             digitalRead(sensor_pin) == HIGH)
+  {
+    Serial.println("Turn System ON");
+    Serial.println("");
   }
 }
 
-void loop(){
+void loop()
+{
 }
