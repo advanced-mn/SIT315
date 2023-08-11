@@ -1,38 +1,64 @@
 static int led_pin = 8;
 static int sensor_pin = 2;
 static int sensor2_pin = 3;
-
-static int g_led_pin = PB5;
-
 bool state = false;
 
+
+static int g_led_pin = PB5;
+bool state_g = false;
+float seconds = 2;
+int cycles = seconds * 16000000 / 256;
+volatile int timer1_ovf = 256 - cycles; 
 
 
 void setup()
 {
+  // 3rd motion sensor setup
   PCICR |= B00000100;
   PCMSK2 |= B00010000;
+  pinMode(sensor2_pin, INPUT);
   
   
   
+  // Green LED set up
+  pinMode(13, OUTPUT);
+  TCCR1A = 0; //to reset the timer register 
+  TCCR1B = 0; //
+  //init timer interupt
+  TCNT1 = timer1_ovf;  
+  TCCR1B |= (1 << CS12);
+  TIMSK1 |= (1 << TOIE1);
+  
+  
+  
+
   // Set up the pin to output mode for the LED
   pinMode(led_pin, OUTPUT);
   // Set up the pin to input mode
   pinMode(sensor_pin, INPUT);
-  
-  pinMode(sensor2_pin, INPUT);
-  
+    
   attachInterrupt(digitalPinToInterrupt(sensor2_pin),
                   sensor_interrupt, CHANGE);
-  
   attachInterrupt(digitalPinToInterrupt(sensor_pin),
                   sensor_interrupt, CHANGE);
  
+  
+  
   
   Serial.begin(9600);
 }
 
 
+// Green LED interrupt
+ISR (TIMER1_OVF_vect)
+{
+  TCNT1 = timer1_ovf;
+  digitalWrite(13, state_g);
+  state_g = !state_g;
+}
+
+
+// 3rd PIR sensor interrupt
 ISR(PCINT2_vect){
   state = !state;
   
@@ -48,6 +74,8 @@ ISR(PCINT2_vect){
   }
 }
 
+
+//Digital interrupt
 void sensor_interrupt()
 {  
   state = !state;
