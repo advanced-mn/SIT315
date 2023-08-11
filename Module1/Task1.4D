@@ -1,0 +1,69 @@
+static int led_pin = 8;
+static int sensor_pin = 2;
+static int sensor2_pin = 3;
+
+static int g_led_pin = PB5;
+
+bool state = false;
+
+
+
+void setup()
+{
+  PCICR |= B00000100;
+  PCMSK2 |= B00010000;
+  
+  
+  
+  // Set up the pin to output mode for the LED
+  pinMode(led_pin, OUTPUT);
+  // Set up the pin to input mode
+  pinMode(sensor_pin, INPUT);
+  
+  pinMode(sensor2_pin, INPUT);
+  
+  attachInterrupt(digitalPinToInterrupt(sensor2_pin),
+                  sensor_interrupt, CHANGE);
+  
+  attachInterrupt(digitalPinToInterrupt(sensor_pin),
+                  sensor_interrupt, CHANGE);
+ 
+  
+  Serial.begin(9600);
+}
+
+
+ISR(PCINT2_vect){
+  state = !state;
+  
+  if (state == true)
+  {
+    digitalWrite(led_pin, HIGH);
+    Serial.println("ON");
+  } else if (state == false)
+  {
+  	digitalWrite(led_pin, LOW);
+    Serial.println("OFF");
+    Serial.println("");
+  }
+}
+
+void sensor_interrupt()
+{  
+  state = !state;
+  
+  if (state == true)
+  {
+    digitalWrite(led_pin, HIGH);
+    Serial.println("ON");
+  } else if (state == false)
+  {
+  	digitalWrite(led_pin, LOW);
+    Serial.println("OFF");
+    Serial.println("");
+  }
+}
+
+void loop()
+{
+}
